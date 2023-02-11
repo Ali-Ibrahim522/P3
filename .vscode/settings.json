@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "schedulers.h": "c",
+        "stdbool.h": "c"
+    }
+}
