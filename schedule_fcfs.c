@@ -1,3 +1,8 @@
+/*
+  created by Ali Ibrahim
+
+  class to process tasks using the first come first serve algorithm
+*/
 #include "list.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,11 +10,13 @@
 #include <string.h>
 #include "schedulers.h"
 #include "cpu.h"
-
+// nodes to keep track of the start and end of the list
 struct node *head = NULL;
 struct node *end = NULL;
+// num of nodes to be processed
 int size = 0;
 
+// adds a new task to the list
 void add(char *name, int priority, int burst) {
     Task *newTask = (Task*)malloc(sizeof(Task*));
     newTask->name = name;
@@ -28,6 +35,7 @@ void add(char *name, int priority, int burst) {
     size++;
 }
 
+//chooses tasks in alphabetical order
 bool comesBefore(char *a, char *b) { return strcmp(a, b) < 0; }
 
 // based on traverse from list.c
@@ -54,7 +62,9 @@ Task *pickNextTask() {
 
 // invoke the scheduler
 void schedule() {
+    //  num of times cpu goes idle
     int idles = 0;
+    //arrays for info table
     char* names[size];
     int tat[size];
     int wt[size];
@@ -62,20 +72,26 @@ void schedule() {
 
     int i = 0;
     int time = 0;
+    // while there is a task to be processed
     Task* curr = pickNextTask();
     while(curr != NULL) {
+      // run task
       run(curr, curr->burst);
       time += curr->burst;
       printf("        Time is now: %d\n", time);
+      //update info table
       names[i] = curr->name;
       tat[i] = time;
       wt[i] = tat[i] - curr->burst;
       rt[i] = wt[i];
       i++;
       free(curr);
+      //pick next task
       curr = pickNextTask();
+      //idle caused by cpu switching tasks
       idles++;
     }
+    // printing info table
     printf("\n...");
     for (int i = 0; i < size; i++) {
       printf("| %3s ", names[i]);
@@ -99,7 +115,6 @@ void schedule() {
       printf("| %3d ", rt[i]);
     }
     printf("|\n");
-    //printf("math:  %d", (time + --idles));
-    //double cpuUtil = (time / (time + idles)) * 100;
+    // printing cpu util
     printf("CPU Utilization: %.2f%%\n", ((time / (float)(time + --idles)) * 100));
 }
