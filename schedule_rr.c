@@ -8,6 +8,7 @@
 
 struct node *head = NULL;
 struct node *end = NULL;
+int size = 0;
 
 void add(char *name, int priority, int burst) {
     Task *newTask = (Task*)malloc(sizeof(Task*));
@@ -24,6 +25,7 @@ void add(char *name, int priority, int burst) {
         end = end->next;
         end->task = newTask;
     }
+    size++;
 }
 
 bool comesBefore(char *a, char *b) { return strcmp(a, b) < 0; }
@@ -49,10 +51,26 @@ Task *pickNextTask() {
   return best_sofar;
 }
 
+int indexOf(char* names[], char* find) {
+    for (int i = 0; i < size; i++) {
+      if(strcmp(find, names[i]) == 0) return i;
+    }
+    return -1;
+}
 
 // invoke the scheduler
 void schedule() {
+    int idles = 0;
+    char* names[size];
+    for (int i = 0; i < size; i++) { names[i] = ""; }
+    int tat[size];
+    int wt[size];
+    int rt[size];
+    int ls[size];
+
+    int end = 0;
     struct node* loopHead;
+    bool firstLoop = true;
     int time = 0;
     do {
         loopHead = NULL;
@@ -60,10 +78,36 @@ void schedule() {
         while(curr != NULL) {
             if (curr-> burst <= QUANTUM) {
                 run(curr, curr->burst);
+                int ind = indexOf(names, curr->name);
+                if (ind == -1) {
+                    names[end] = curr->name;
+                    tat[end] = time + curr->burst;
+                    wt[end] = time;
+                    rt[end] = time;
+                    ls[end] = tat[end];
+                    end++;
+                } else {
+                    tat[ind] = time + curr->burst;
+                    wt[ind] += time - ls[ind];
+                    ls[ind] = tat[ind];
+                }
                 time += curr->burst;
                 free(curr);
             } else {
                 run(curr, QUANTUM);
+                int ind = indexOf(names, curr->name);
+                if (ind == -1) {
+                    names[end] = curr->name;
+                    tat[end] = time + QUANTUM;
+                    wt[end] = time;
+                    rt[end] = time;
+                    ls[end] = tat[end];
+                    end++;
+                } else {
+                    tat[ind] = time + QUANTUM;
+                    wt[ind] += (time - ls[ind]);
+                    ls[ind] = tat[ind];
+                }
                 time += QUANTUM;
                 curr->burst -= QUANTUM;
                 if (loopHead == NULL) {
@@ -80,8 +124,44 @@ void schedule() {
                 }
             }
             printf("        Time is now: %d\n", time);
-            curr = pickNextTask();
+            if (firstLoop) {
+              curr = pickNextTask();
+            } else {
+              if (head == NULL) {
+                curr = NULL;
+              } else {
+                curr = head->task;
+                head = head->next;
+              }
+            }
+            idles++;
         }
         head = loopHead;
+        firstLoop = false;
     } while(head != NULL);
+
+    printf("\n...");
+    for (int i = 0; i < size; i++) {
+      printf("| %3s ", names[i]);
+    }
+    printf("|\n");
+
+    printf("TAT");
+    for (int i = 0; i < size; i++) {
+      printf("| %3d ", tat[i]);
+    }
+    printf("|\n");
+
+    printf("WT ");
+    for (int i = 0; i < size; i++) {
+      printf("| %3d ", wt[i]);
+    }
+    printf("|\n");
+
+    printf("RT ");
+    for (int i = 0; i < size; i++) {
+      printf("| %3d ", rt[i]);
+    }
+    printf("|\n");
+    printf("CPU Utilization: %.2f%%\n", ((time / (float)(time + --idles)) * 100));
 }

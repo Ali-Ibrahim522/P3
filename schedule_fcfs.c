@@ -54,6 +54,7 @@ Task *pickNextTask() {
 
 // invoke the scheduler
 void schedule() {
+    int idles = 0;
     char* names[size];
     int tat[size];
     int wt[size];
@@ -65,7 +66,7 @@ void schedule() {
     while(curr != NULL) {
       run(curr, curr->burst);
       time += curr->burst;
-      printf("    Time is now: %d\n", time);
+      printf("        Time is now: %d\n", time);
       names[i] = curr->name;
       tat[i] = time;
       wt[i] = tat[i] - curr->burst;
@@ -73,8 +74,8 @@ void schedule() {
       i++;
       free(curr);
       curr = pickNextTask();
+      idles++;
     }
-
     printf("\n...");
     for (int i = 0; i < size; i++) {
       printf("| %3s ", names[i]);
@@ -98,4 +99,7 @@ void schedule() {
       printf("| %3d ", rt[i]);
     }
     printf("|\n");
+    //printf("math:  %d", (time + --idles));
+    //double cpuUtil = (time / (time + idles)) * 100;
+    printf("CPU Utilization: %.2f%%\n", ((time / (float)(time + --idles)) * 100));
 }

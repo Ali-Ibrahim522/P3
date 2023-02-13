@@ -47,7 +47,6 @@ void delete(struct node **head, Task *task) {
 void traverse(struct node *head) {
     struct node *temp;
     temp = head;
-
     while (temp != NULL) {
         printf("[%s] [%d] [%d]\n",temp->task->name, temp->task->priority, temp->task->burst);
         temp = temp->next;

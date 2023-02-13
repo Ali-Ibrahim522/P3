@@ -58,6 +58,7 @@ Task *pickNextTask() {
 
 // invoke the scheduler
 void schedule() {
+    int idles = 0;
     char* names[size];
     int tat[size];
     int wt[size];
@@ -77,6 +78,7 @@ void schedule() {
       i++;
       free(curr);
       curr = pickNextTask();
+      idles++;
     }
 
     printf("\n...");
@@ -102,4 +104,5 @@ void schedule() {
       printf("| %3d ", rt[i]);
     }
     printf("|\n");
+    printf("CPU Utilization: %.2f%%\n", ((time / (float)(time + --idles)) * 100));
 }
